@@ -39,9 +39,13 @@ CREATE TABLE IF NOT EXISTS participants (
 CREATE TABLE IF NOT EXISTS items (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
 
+    bill_id         INTEGER NOT NULL,
+
     name            VARCHAR(255) NOT NULL,
     price           DECIMAL NOT NULL,
-    initial_qty     INTEGER NOT NULL
+    initial_qty     INTEGER NOT NULL,
+
+    FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS orders (

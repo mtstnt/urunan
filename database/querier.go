@@ -9,7 +9,10 @@ import (
 )
 
 type Querier interface {
+	CreateBill(ctx context.Context, arg CreateBillParams) (Bill, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	GetBillDetail(ctx context.Context, id int64) (GetBillDetailRow, error)
+	GetBillsByUser(ctx context.Context, userID int64) ([]GetBillsByUserRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id int64) (User, error)
 }

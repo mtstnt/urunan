@@ -1,11 +1,14 @@
 version: "2"
 sql:
   - engine: "sqlite"
-    queries: "sql/queries.sql"
+    queries:
+      - "sql/queries/users.sql"
+      - "sql/queries/bills.sql"
+      - "sql/queries/items.sql"
+      - "sql/queries/participants.sql"
     schema: "sql/schema.sql"
     gen:
       go:
         package: "database"
         out: "database"
-        emit_interface: true
         emit_pointers_for_null_types: true

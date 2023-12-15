@@ -17,6 +17,7 @@ type Bill struct {
 
 type Item struct {
 	ID         int64
+	BillID     int64
 	Name       string
 	Price      float64
 	InitialQty int64
@@ -26,14 +27,14 @@ type Order struct {
 	ID            int64
 	ParticipantID int64
 	ItemID        int64
-	Qty           interface{}
+	Qty           int64
 }
 
 type Participant struct {
 	ID            int64
 	BillID        int64
 	UserID        int64
-	JoinedAt      interface{}
+	JoinedAt      int64
 	PaymentStatus sql.NullBool
 }
 
