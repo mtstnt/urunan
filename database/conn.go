@@ -10,7 +10,7 @@ import (
 // Singleton for now.
 var (
 	Q  Querier
-	db *sql.DB
+	DB *sql.DB
 )
 
 func Recreate() {
@@ -19,7 +19,7 @@ func Recreate() {
 		panic(err)
 	}
 
-	if _, err := db.Exec(string(query)); err != nil {
+	if _, err := DB.Exec(string(query)); err != nil {
 		panic(err)
 	}
 }
@@ -29,6 +29,6 @@ func Initialize() {
 	if err != nil {
 		panic(err)
 	}
-	db = _db
+	DB = _db
 	Q = New(_db)
 }

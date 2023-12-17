@@ -9,38 +9,39 @@ import (
 )
 
 type Bill struct {
-	ID          int64
-	HostUserID  int64
-	Title       string
-	Description string
+	ID          int64  `json:"id"`
+	HostUserID  int64  `json:"host_user_id"`
+	Code        string `json:"code"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 type Item struct {
-	ID         int64
-	BillID     int64
-	Name       string
-	Price      float64
-	InitialQty int64
+	ID         int64   `json:"id"`
+	BillID     int64   `json:"bill_id"`
+	Name       string  `json:"name"`
+	Price      float64 `json:"price"`
+	InitialQty int64   `json:"initial_qty"`
 }
 
 type Order struct {
-	ID            int64
-	ParticipantID int64
-	ItemID        int64
-	Qty           int64
+	ID            int64 `json:"id"`
+	ParticipantID int64 `json:"participant_id"`
+	ItemID        int64 `json:"item_id"`
+	Qty           int64 `json:"qty"`
 }
 
 type Participant struct {
-	ID            int64
-	BillID        int64
-	UserID        int64
-	JoinedAt      int64
-	PaymentStatus sql.NullBool
+	ID            int64        `json:"id"`
+	BillID        int64        `json:"bill_id"`
+	UserID        int64        `json:"user_id"`
+	JoinedAt      int64        `json:"joined_at"`
+	PaymentStatus sql.NullBool `json:"payment_status"`
 }
 
 type User struct {
-	ID       int64
-	FullName string
-	Email    string
-	Password string
+	ID       int64  `json:"id"`
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }

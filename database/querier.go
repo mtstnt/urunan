@@ -9,12 +9,17 @@ import (
 )
 
 type Querier interface {
+	AddItemToBill(ctx context.Context, arg AddItemToBillParams) (Item, error)
+	AddParticipantToBill(ctx context.Context, arg AddParticipantToBillParams) (Participant, error)
 	CreateBill(ctx context.Context, arg CreateBillParams) (Bill, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	GetBillDetail(ctx context.Context, id int64) (GetBillDetailRow, error)
+	GetBillDetail(ctx context.Context, code string) (GetBillDetailRow, error)
+	GetBillItems(ctx context.Context, billID int64) ([]Item, error)
+	GetBillParticipants(ctx context.Context, billID int64) ([]User, error)
 	GetBillsByUser(ctx context.Context, userID int64) ([]GetBillsByUserRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id int64) (User, error)
+	UpdateItemAtBill(ctx context.Context, arg UpdateItemAtBillParams) (Item, error)
 }
 
 var _ Querier = (*Queries)(nil)

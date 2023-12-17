@@ -1,11 +1,11 @@
 -- name: GetBillItems :many
-SELECT id, name, price, initial_qty
+SELECT id, bill_id, name, price, initial_qty
 FROM items
 WHERE bill_id = ?;
 
 -- name: AddItemToBill :one
-INSERT INTO items (name, price, initial_qty)
-VALUES (:name, :price, :initial_qty)
+INSERT INTO items (name, price, initial_qty, bill_id)
+VALUES (:name, :price, :initial_qty, :bill_id)
 RETURNING *;
 
 -- name: UpdateItemAtBill :one

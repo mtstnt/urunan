@@ -7,7 +7,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/mtstnt/urunan/database"
 	"github.com/mtstnt/urunan/helpers"
-	"github.com/mtstnt/urunan/models"
+	"github.com/mtstnt/urunan/sessions"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -17,17 +17,17 @@ type AuthenticateUserRequest struct {
 }
 
 type AuthenticateUserResponse struct {
-	Token string      `json:"token"`
-	User  models.User `json:"user"`
+	Token string        `json:"token"`
+	User  database.User `json:"user"`
 }
 
-func AuthenticateUserHandler(c *fiber.Ctx) error {
+func AuthenticateUserHandler(c *fiber.Ctx, deps *Dependencies) error {
 	var request AuthenticateUserRequest
 	if err := c.BodyParser(&request); err != nil {
 		return helpers.Error(c, http.StatusBadRequest, err)
 	}
 
-	row, err := database.Q.GetUserByEmail(c.Context(), request.Email)
+	row, err := deps.Q.GetUserByEmail(c.Context(), request.Email)
 	if err != nil {
 		return helpers.Error(c, http.StatusInternalServerError, err)
 	}
@@ -36,12 +36,12 @@ func AuthenticateUserHandler(c *fiber.Ctx) error {
 		return helpers.Error(c, http.StatusInternalServerError, err)
 	}
 
-	var user models.User
+	var user database.User
 	if err := mapstructure.Decode(&row, &user); err != nil {
 		return helpers.Error(c, http.StatusInternalServerError, err)
 	}
 
-	token, err := helpers.GenerateTokenFromUserID(row.ID)
+	token, err := sessions.Create(row.ID)
 	if err != nil {
 		return helpers.Error(c, http.StatusInternalServerError, err)
 	}

@@ -16,9 +16,9 @@ RETURNING id, bill_id, user_id, joined_at, payment_status
 `
 
 type AddParticipantToBillParams struct {
-	BillID   int64
-	UserID   int64
-	JoinedAt int64
+	BillID   int64 `json:"bill_id"`
+	UserID   int64 `json:"user_id"`
+	JoinedAt int64 `json:"joined_at"`
 }
 
 func (q *Queries) AddParticipantToBill(ctx context.Context, arg AddParticipantToBillParams) (Participant, error) {
@@ -35,11 +35,7 @@ func (q *Queries) AddParticipantToBill(ctx context.Context, arg AddParticipantTo
 }
 
 const getBillParticipants = `-- name: GetBillParticipants :many
-SELECT
-    id,
-    full_name,
-    email,
-    password
+SELECT id, full_name, email, password
 FROM users
 WHERE id IN (
     SELECT user_id FROM participants
@@ -53,7 +49,7 @@ func (q *Queries) GetBillParticipants(ctx context.Context, billID int64) ([]User
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	items := []User{}
 	for rows.Next() {
 		var i User
 		if err := rows.Scan(

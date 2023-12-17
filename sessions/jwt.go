@@ -1,4 +1,4 @@
-package helpers
+package sessions
 
 import (
 	"time"
@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	secretKey = "asdfasdafasdasdfasdf"
+	secretKey          = "asdfasdafasdasdfasdf"
+	expirationDuration = 1 * time.Minute
 )
 
 type Claim struct {
@@ -26,14 +27,24 @@ func GetUserIDFromJWT(token string) (int64, error) {
 	return claim.UserID, nil
 }
 
-func GenerateTokenFromUserID(userID int64) (string, error) {
+func Create(userID int64) (string, error) {
+	currentTime := time.Now()
+	expiresAt := currentTime.Add(expirationDuration)
+
 	claim := Claim{
 		RegisteredClaims: jwt.RegisteredClaims{
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(currentTime),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
 		UserID: userID,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	return token.SignedString([]byte(secretKey))
+	tokenStr, err := token.SignedString([]byte(secretKey))
+	if err != nil {
+		return "", err
+	}
+
+	Register(tokenStr, expiresAt.Unix(), userID)
+
+	return tokenStr, nil
 }

@@ -10,19 +10,25 @@ import (
 )
 
 const addItemToBill = `-- name: AddItemToBill :one
-INSERT INTO items (name, price, initial_qty)
-VALUES (?1, ?2, ?3)
+INSERT INTO items (name, price, initial_qty, bill_id)
+VALUES (?1, ?2, ?3, ?4)
 RETURNING id, bill_id, name, price, initial_qty
 `
 
 type AddItemToBillParams struct {
-	Name       string
-	Price      float64
-	InitialQty int64
+	Name       string  `json:"name"`
+	Price      float64 `json:"price"`
+	InitialQty int64   `json:"initial_qty"`
+	BillID     int64   `json:"bill_id"`
 }
 
 func (q *Queries) AddItemToBill(ctx context.Context, arg AddItemToBillParams) (Item, error) {
-	row := q.db.QueryRowContext(ctx, addItemToBill, arg.Name, arg.Price, arg.InitialQty)
+	row := q.db.QueryRowContext(ctx, addItemToBill,
+		arg.Name,
+		arg.Price,
+		arg.InitialQty,
+		arg.BillID,
+	)
 	var i Item
 	err := row.Scan(
 		&i.ID,
@@ -35,33 +41,23 @@ func (q *Queries) AddItemToBill(ctx context.Context, arg AddItemToBillParams) (I
 }
 
 const getBillItems = `-- name: GetBillItems :many
-SELECT
-    id,
-    name,
-    price,
-    initial_qty
+SELECT id, bill_id, name, price, initial_qty
 FROM items
 WHERE bill_id = ?
 `
 
-type GetBillItemsRow struct {
-	ID         int64
-	Name       string
-	Price      float64
-	InitialQty int64
-}
-
-func (q *Queries) GetBillItems(ctx context.Context, billID int64) ([]GetBillItemsRow, error) {
+func (q *Queries) GetBillItems(ctx context.Context, billID int64) ([]Item, error) {
 	rows, err := q.db.QueryContext(ctx, getBillItems, billID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetBillItemsRow
+	items := []Item{}
 	for rows.Next() {
-		var i GetBillItemsRow
+		var i Item
 		if err := rows.Scan(
 			&i.ID,
+			&i.BillID,
 			&i.Name,
 			&i.Price,
 			&i.InitialQty,
@@ -90,10 +86,10 @@ RETURNING id, bill_id, name, price, initial_qty
 `
 
 type UpdateItemAtBillParams struct {
-	Name       string
-	Price      float64
-	InitialQty int64
-	ItemID     int64
+	Name       string  `json:"name"`
+	Price      float64 `json:"price"`
+	InitialQty int64   `json:"initial_qty"`
+	ItemID     int64   `json:"item_id"`
 }
 
 func (q *Queries) UpdateItemAtBill(ctx context.Context, arg UpdateItemAtBillParams) (Item, error) {

@@ -16,9 +16,9 @@ RETURNING id, full_name, email, password
 `
 
 type CreateUserParams struct {
-	FullName string
-	Email    string
-	Password string
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -34,11 +34,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT
-    id,
-    full_name,
-    email,
-    password
+SELECT id, full_name, email, password
 FROM users
 WHERE email = ?
 `
@@ -56,11 +52,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT
-    id,
-    full_name,
-    email,
-    password
+SELECT id, full_name, email, password
 FROM users
 WHERE id = ?
 `

@@ -10,23 +10,30 @@ import (
 )
 
 const createBill = `-- name: CreateBill :one
-INSERT INTO bills (title, description, host_user_id)
-VALUES (?1, ?2, ?3)
-RETURNING id, host_user_id, title, description
+INSERT INTO bills (title, code, description, host_user_id)
+VALUES (?1, ?2, ?3, ?4)
+RETURNING id, host_user_id, code, title, description
 `
 
 type CreateBillParams struct {
-	Title       string
-	Description string
-	HostUserID  int64
+	Title       string `json:"title"`
+	Code        string `json:"code"`
+	Description string `json:"description"`
+	HostUserID  int64  `json:"host_user_id"`
 }
 
 func (q *Queries) CreateBill(ctx context.Context, arg CreateBillParams) (Bill, error) {
-	row := q.db.QueryRowContext(ctx, createBill, arg.Title, arg.Description, arg.HostUserID)
+	row := q.db.QueryRowContext(ctx, createBill,
+		arg.Title,
+		arg.Code,
+		arg.Description,
+		arg.HostUserID,
+	)
 	var i Bill
 	err := row.Scan(
 		&i.ID,
 		&i.HostUserID,
+		&i.Code,
 		&i.Title,
 		&i.Description,
 	)
@@ -34,31 +41,28 @@ func (q *Queries) CreateBill(ctx context.Context, arg CreateBillParams) (Bill, e
 }
 
 const getBillDetail = `-- name: GetBillDetail :one
-SELECT
-    b.id,
-    b.title,
-    b.description,
-    b.host_user_id,
-    u.full_name AS user_full_name
+SELECT b.id, b.title, b.code, b.description, b.host_user_id, u.full_name AS user_full_name
 FROM bills b
-JOIN users u ON host_user_id = ?1
-WHERE b.id = ?1
+JOIN users u ON host_user_id = u.id
+WHERE b.code = ?1
 `
 
 type GetBillDetailRow struct {
-	ID           int64
-	Title        string
-	Description  string
-	HostUserID   int64
-	UserFullName string
+	ID           int64  `json:"id"`
+	Title        string `json:"title"`
+	Code         string `json:"code"`
+	Description  string `json:"description"`
+	HostUserID   int64  `json:"host_user_id"`
+	UserFullName string `json:"user_full_name"`
 }
 
-func (q *Queries) GetBillDetail(ctx context.Context, userID int64) (GetBillDetailRow, error) {
-	row := q.db.QueryRowContext(ctx, getBillDetail, userID)
+func (q *Queries) GetBillDetail(ctx context.Context, code string) (GetBillDetailRow, error) {
+	row := q.db.QueryRowContext(ctx, getBillDetail, code)
 	var i GetBillDetailRow
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
+		&i.Code,
 		&i.Description,
 		&i.HostUserID,
 		&i.UserFullName,
@@ -67,24 +71,18 @@ func (q *Queries) GetBillDetail(ctx context.Context, userID int64) (GetBillDetai
 }
 
 const getBillsByUser = `-- name: GetBillsByUser :many
-SELECT
-    id,
-    title,
-    description,
-    (b.host_user_id = ?1) AS is_host
+SELECT b.id, title, description, code, (b.host_user_id = ?1) AS is_host
 FROM bills b
-WHERE host_user_id = ?1
-OR :user_id IN (
-    SELECT user_id FROM participants
-    WHERE bill_id = b.id
-)
+LEFT JOIN participants p ON p.bill_id = b.id
+WHERE p.user_id = ?1
 `
 
 type GetBillsByUserRow struct {
-	ID          int64
-	Title       string
-	Description string
-	IsHost      interface{}
+	ID          int64       `json:"id"`
+	Title       string      `json:"title"`
+	Description string      `json:"description"`
+	Code        string      `json:"code"`
+	IsHost      interface{} `json:"is_host"`
 }
 
 func (q *Queries) GetBillsByUser(ctx context.Context, userID int64) ([]GetBillsByUserRow, error) {
@@ -93,13 +91,14 @@ func (q *Queries) GetBillsByUser(ctx context.Context, userID int64) ([]GetBillsB
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetBillsByUserRow
+	items := []GetBillsByUserRow{}
 	for rows.Next() {
 		var i GetBillsByUserRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
 			&i.Description,
+			&i.Code,
 			&i.IsHost,
 		); err != nil {
 			return nil, err
