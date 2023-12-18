@@ -26,17 +26,19 @@ func Initialize() {
 	expireTracker = make(expireTrackerMap)
 
 	go func(t *time.Ticker) {
-		cur := <-t.C
-		slog.Debug("Checking expire tracker.")
-		mu.Lock()
-		for k, v := range expireTracker {
-			if cur.Unix() > k {
-				slog.Debug("Token " + v + " expired.")
-				delete(expireTracker, k)
-				delete(sessions, v)
+		for {
+			cur := <-t.C
+			fmt.Println("Checking expire tracker.")
+			mu.Lock()
+			for k, v := range expireTracker {
+				if cur.Unix() > k {
+					slog.Debug("Token " + v + " expired.")
+					delete(expireTracker, k)
+					delete(sessions, v)
+				}
 			}
+			mu.Unlock()
 		}
-		mu.Unlock()
 	}(time.NewTicker(tickInterval))
 }
 

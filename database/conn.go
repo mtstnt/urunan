@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"log/slog"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -22,6 +23,8 @@ func Recreate() {
 	if _, err := DB.Exec(string(query)); err != nil {
 		panic(err)
 	}
+
+	slog.Info("Successfully refreshed database schema and data...")
 }
 
 func Initialize() {
@@ -31,4 +34,6 @@ func Initialize() {
 	}
 	DB = _db
 	Q = New(_db)
+
+	slog.Info("Successfully opened database connection")
 }

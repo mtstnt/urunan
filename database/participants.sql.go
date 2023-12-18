@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"strings"
 )
 
 const addParticipantToBill = `-- name: AddParticipantToBill :one
@@ -35,28 +36,70 @@ func (q *Queries) AddParticipantToBill(ctx context.Context, arg AddParticipantTo
 }
 
 const getBillParticipants = `-- name: GetBillParticipants :many
-SELECT id, full_name, email, password
-FROM users
-WHERE id IN (
-    SELECT user_id FROM participants
-    WHERE bill_id = ?1
-)
+SELECT p.id as id, u.id AS user_id, full_name
+FROM participants p
+JOIN users u ON p.user_id = u.id
+WHERE p.bill_id = ?1
 `
 
-func (q *Queries) GetBillParticipants(ctx context.Context, billID int64) ([]User, error) {
+type GetBillParticipantsRow struct {
+	ID       int64  `json:"id"`
+	UserID   int64  `json:"user_id"`
+	FullName string `json:"full_name"`
+}
+
+func (q *Queries) GetBillParticipants(ctx context.Context, billID int64) ([]GetBillParticipantsRow, error) {
 	rows, err := q.db.QueryContext(ctx, getBillParticipants, billID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []User{}
+	items := []GetBillParticipantsRow{}
 	for rows.Next() {
-		var i User
+		var i GetBillParticipantsRow
+		if err := rows.Scan(&i.ID, &i.UserID, &i.FullName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getParticipantOrders = `-- name: GetParticipantOrders :many
+SELECT id, participant_id, item_id, qty FROM orders
+WHERE participant_id IN (/*SLICE:participant_ids*/?)
+`
+
+func (q *Queries) GetParticipantOrders(ctx context.Context, participantIds []int64) ([]Order, error) {
+	query := getParticipantOrders
+	var queryParams []interface{}
+	if len(participantIds) > 0 {
+		for _, v := range participantIds {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:participant_ids*/?", strings.Repeat(",?", len(participantIds))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:participant_ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Order{}
+	for rows.Next() {
+		var i Order
 		if err := rows.Scan(
 			&i.ID,
-			&i.FullName,
-			&i.Email,
-			&i.Password,
+			&i.ParticipantID,
+			&i.ItemID,
+			&i.Qty,
 		); err != nil {
 			return nil, err
 		}

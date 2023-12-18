@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,18 +11,15 @@ import (
 )
 
 func main() {
-
 	app := fiber.New()
-
 	database.Initialize()
 
-	fmt.Printf("%+v\n", os.Args)
-	if len(os.Args) >= 2 {
+	if len(os.Args) >= 2 && os.Args[0] == "refreshdb" {
 		database.Recreate()
 	}
 
 	sessions.Initialize()
-
 	usecases.Register(app)
-	app.Listen(":8080")
+
+	slog.Error("Error: ", app.Listen(":8080"))
 }
