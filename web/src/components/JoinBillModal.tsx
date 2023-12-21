@@ -13,6 +13,7 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 type DisclosureState = {
   isOpen: boolean;
@@ -26,8 +27,10 @@ type Props = {
 
 export default function JoinBillModal({ disclosure }: Props) {
   const [code, setCode] = useState("");
+  const navigate = useNavigate();
   const handleJoinClicked = () => {
-    toast.success("wadidaw: " + code);
+    toast.success("Joining " + code);
+    navigate("/" + code);
   };
   return (
     <Modal isOpen={disclosure.isOpen} onClose={disclosure.onClose}>

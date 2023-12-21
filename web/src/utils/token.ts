@@ -8,3 +8,12 @@ export function getTokenFromStorage(): string | null {
 export function storeTokenInStorage(token: string) {
     localStorage.setItem(STORAGE_KEY, token);
 }
+
+export async function wait(n: number) {
+    return new Promise<void>((resolve) => {
+        const t = setTimeout(() => {
+            clearTimeout(t);
+            resolve();
+        }, n * 1000);
+    });
+}

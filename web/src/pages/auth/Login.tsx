@@ -1,5 +1,5 @@
 import { FieldErrors, useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { storeTokenInStorage } from "../../utils/token";
 import {
   Box,
@@ -13,6 +13,7 @@ import {
 // import { baseURL } from "../../constants";
 import { useLoadingStore } from "../../stores/loading";
 import toast from "react-hot-toast";
+import { useEffect } from "react";
 
 type LoginForm = {
   email: string;
@@ -22,7 +23,12 @@ type LoginForm = {
 export default function Login() {
   const { register, handleSubmit } = useForm<LoginForm>();
   const { setIsLoading } = useLoadingStore();
+  const [ urlSearchParams, ] = useSearchParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+
+  }, []);
 
   const onSubmit = async (data: LoginForm) => {
     console.log(data);
@@ -42,7 +48,9 @@ export default function Login() {
       // }
       // console.log(response);
       storeTokenInStorage("asdfg");
-      navigate("/");
+      navigate(urlSearchParams.get("next") ?? "/");
+
+      // navigate("/");
     } catch (e) {
       toast.error("Error: " + e);
     } finally {

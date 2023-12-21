@@ -7,7 +7,8 @@ import Profile from "./pages/Profile";
 import { useLoadingStore } from "./stores/loading";
 import { Box, ChakraProvider, Spinner } from "@chakra-ui/react";
 
-import './styles/index.css';
+import "./styles/index.css";
+import { CustomErrorBoundary } from "./components/ErrorBoundary";
 
 const router = createBrowserRouter([
   { path: "/", element: <Profile /> },
@@ -36,7 +37,7 @@ export default function App() {
       <Box bg={"#eee"}>
         <Box
           bg={"white"}
-          w={{
+          width={{
             base: "100%",
             sm: "100%",
             md: "80%",
@@ -46,21 +47,23 @@ export default function App() {
           minH={"100vh"}
           margin={"0 auto"}
         >
-          <LoadingOverlayWrapper
-            active={isLoading}
-            spinner={<Spinner size={"xl"} />}
-          >
-            <Toaster
-              toastOptions={{
-                style: {
-                  border: "1px solid #713200",
-                  padding: "16px",
-                  color: "#713200",
-                },
-              }}
-            />
-            <RouterProvider router={router} />
-          </LoadingOverlayWrapper>
+          <CustomErrorBoundary>
+            <LoadingOverlayWrapper
+              active={isLoading}
+              spinner={<Spinner size={"xl"} />}
+            >
+              <Toaster
+                toastOptions={{
+                  style: {
+                    border: "1px solid #713200",
+                    padding: "16px",
+                    color: "#713200",
+                  },
+                }}
+              />
+              <RouterProvider router={router} />
+            </LoadingOverlayWrapper>
+          </CustomErrorBoundary>
         </Box>
       </Box>
     </ChakraProvider>
