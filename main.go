@@ -14,7 +14,7 @@ func main() {
 	app := fiber.New()
 	database.Initialize()
 
-	if len(os.Args) >= 2 && os.Args[0] == "refreshdb" {
+	if len(os.Args) >= 2 && os.Args[1] == "refreshdb" {
 		database.Recreate()
 	}
 

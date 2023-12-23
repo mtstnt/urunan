@@ -75,6 +75,60 @@ func (q *Queries) GetBillItems(ctx context.Context, billID int64) ([]Item, error
 	return items, nil
 }
 
+const getItemsRemainingQtyByBill = `-- name: GetItemsRemainingQtyByBill :many
+SELECT
+    id,
+    name,
+    price,
+    initial_qty,
+    (initial_qty - purchased_qty) AS remaining_qty
+FROM items
+LEFT JOIN (
+    SELECT o.item_id, SUM(qty) AS purchased_qty FROM orders o
+    LEFT JOIN participants p ON p.id = o.participant_id
+    WHERE p.bill_id = ?1
+    GROUP BY o.item_id
+) a ON a.item_id = id
+WHERE bill_id = ?1
+`
+
+type GetItemsRemainingQtyByBillRow struct {
+	ID           int64       `json:"id"`
+	Name         string      `json:"name"`
+	Price        float64     `json:"price"`
+	InitialQty   int64       `json:"initial_qty"`
+	RemainingQty interface{} `json:"remaining_qty"`
+}
+
+func (q *Queries) GetItemsRemainingQtyByBill(ctx context.Context, billID int64) ([]GetItemsRemainingQtyByBillRow, error) {
+	rows, err := q.db.QueryContext(ctx, getItemsRemainingQtyByBill, billID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetItemsRemainingQtyByBillRow{}
+	for rows.Next() {
+		var i GetItemsRemainingQtyByBillRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Price,
+			&i.InitialQty,
+			&i.RemainingQty,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateItemAtBill = `-- name: UpdateItemAtBill :one
 UPDATE items
     SET

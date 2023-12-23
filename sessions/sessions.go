@@ -28,7 +28,7 @@ func Initialize() {
 	go func(t *time.Ticker) {
 		for {
 			cur := <-t.C
-			fmt.Println("Checking expire tracker.")
+			// fmt.Println("Checking expire tracker.")
 			mu.Lock()
 			for k, v := range expireTracker {
 				if cur.Unix() > k {

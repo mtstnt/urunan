@@ -7,28 +7,35 @@ package database
 
 import (
 	"context"
-	"strings"
+	"database/sql"
 )
 
 const addParticipantToBill = `-- name: AddParticipantToBill :one
-INSERT INTO participants (bill_id, user_id, joined_at)
-VALUES (?1, ?2, ?3)
-RETURNING id, bill_id, user_id, joined_at, payment_status
+INSERT INTO participants (bill_id, nickname, user_id, joined_at)
+VALUES (?1, ?2, ?3, ?4)
+RETURNING id, bill_id, user_id, nickname, joined_at, payment_status
 `
 
 type AddParticipantToBillParams struct {
-	BillID   int64 `json:"bill_id"`
-	UserID   int64 `json:"user_id"`
-	JoinedAt int64 `json:"joined_at"`
+	BillID   int64  `json:"bill_id"`
+	Nickname string `json:"nickname"`
+	UserID   int64  `json:"user_id"`
+	JoinedAt int64  `json:"joined_at"`
 }
 
 func (q *Queries) AddParticipantToBill(ctx context.Context, arg AddParticipantToBillParams) (Participant, error) {
-	row := q.db.QueryRowContext(ctx, addParticipantToBill, arg.BillID, arg.UserID, arg.JoinedAt)
+	row := q.db.QueryRowContext(ctx, addParticipantToBill,
+		arg.BillID,
+		arg.Nickname,
+		arg.UserID,
+		arg.JoinedAt,
+	)
 	var i Participant
 	err := row.Scan(
 		&i.ID,
 		&i.BillID,
 		&i.UserID,
+		&i.Nickname,
 		&i.JoinedAt,
 		&i.PaymentStatus,
 	)
@@ -36,16 +43,17 @@ func (q *Queries) AddParticipantToBill(ctx context.Context, arg AddParticipantTo
 }
 
 const getBillParticipants = `-- name: GetBillParticipants :many
-SELECT p.id as id, u.id AS user_id, full_name
+SELECT p.id as id, u.id AS user_id, full_name, nickname
 FROM participants p
-JOIN users u ON p.user_id = u.id
+LEFT JOIN users u ON p.user_id = u.id
 WHERE p.bill_id = ?1
 `
 
 type GetBillParticipantsRow struct {
-	ID       int64  `json:"id"`
-	UserID   int64  `json:"user_id"`
-	FullName string `json:"full_name"`
+	ID       int64         `json:"id"`
+	UserID   sql.NullInt64 `json:"user_id"`
+	FullName string        `json:"full_name"`
+	Nickname string        `json:"nickname"`
 }
 
 func (q *Queries) GetBillParticipants(ctx context.Context, billID int64) ([]GetBillParticipantsRow, error) {
@@ -57,49 +65,11 @@ func (q *Queries) GetBillParticipants(ctx context.Context, billID int64) ([]GetB
 	items := []GetBillParticipantsRow{}
 	for rows.Next() {
 		var i GetBillParticipantsRow
-		if err := rows.Scan(&i.ID, &i.UserID, &i.FullName); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getParticipantOrders = `-- name: GetParticipantOrders :many
-SELECT id, participant_id, item_id, qty FROM orders
-WHERE participant_id IN (/*SLICE:participant_ids*/?)
-`
-
-func (q *Queries) GetParticipantOrders(ctx context.Context, participantIds []int64) ([]Order, error) {
-	query := getParticipantOrders
-	var queryParams []interface{}
-	if len(participantIds) > 0 {
-		for _, v := range participantIds {
-			queryParams = append(queryParams, v)
-		}
-		query = strings.Replace(query, "/*SLICE:participant_ids*/?", strings.Repeat(",?", len(participantIds))[1:], 1)
-	} else {
-		query = strings.Replace(query, "/*SLICE:participant_ids*/?", "NULL", 1)
-	}
-	rows, err := q.db.QueryContext(ctx, query, queryParams...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Order{}
-	for rows.Next() {
-		var i Order
 		if err := rows.Scan(
 			&i.ID,
-			&i.ParticipantID,
-			&i.ItemID,
-			&i.Qty,
+			&i.UserID,
+			&i.FullName,
+			&i.Nickname,
 		); err != nil {
 			return nil, err
 		}

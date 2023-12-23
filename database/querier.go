@@ -12,15 +12,20 @@ type Querier interface {
 	AddItemToBill(ctx context.Context, arg AddItemToBillParams) (Item, error)
 	AddParticipantToBill(ctx context.Context, arg AddParticipantToBillParams) (Participant, error)
 	CreateBill(ctx context.Context, arg CreateBillParams) (Bill, error)
+	CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteOrder(ctx context.Context, id int64) error
+	GetAllOrders(ctx context.Context, billID int64) ([]GetAllOrdersRow, error)
 	GetBillDetail(ctx context.Context, code string) (GetBillDetailRow, error)
 	GetBillItems(ctx context.Context, billID int64) ([]Item, error)
 	GetBillParticipants(ctx context.Context, billID int64) ([]GetBillParticipantsRow, error)
 	GetBillsByUser(ctx context.Context, userID int64) ([]GetBillsByUserRow, error)
-	GetParticipantOrders(ctx context.Context, participantIds []int64) ([]Order, error)
+	GetItemsRemainingQtyByBill(ctx context.Context, billID int64) ([]GetItemsRemainingQtyByBillRow, error)
+	GetParticipantOrders(ctx context.Context, participantIds []int64) ([]GetParticipantOrdersRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id int64) (User, error)
 	UpdateItemAtBill(ctx context.Context, arg UpdateItemAtBillParams) (Item, error)
+	UpdateOrder(ctx context.Context, arg UpdateOrderParams) error
 }
 
 var _ Querier = (*Queries)(nil)

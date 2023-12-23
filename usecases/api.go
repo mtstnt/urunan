@@ -1,7 +1,6 @@
 package usecases
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"strings"
@@ -10,14 +9,18 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/jmoiron/sqlx"
 	"github.com/mtstnt/urunan/database"
 	"github.com/mtstnt/urunan/helpers"
+	"github.com/mtstnt/urunan/repos"
 	"github.com/mtstnt/urunan/sessions"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Dependencies struct {
 	Q  database.Querier
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 type HandlerWithDependencies func(c *fiber.Ctx, d *Dependencies) error
@@ -47,7 +50,7 @@ func JWTMiddleware(deps *Dependencies) fiber.Handler {
 			return helpers.Error(c, http.StatusUnauthorized, err)
 		}
 
-		user, err := deps.Q.GetUserByID(c.Context(), userID)
+		user, err := repos.GetUserByID(c.Context(), deps.DB, userID)
 		if err != nil {
 			return helpers.Error(c, http.StatusUnauthorized, err)
 		}
@@ -59,7 +62,7 @@ func JWTMiddleware(deps *Dependencies) fiber.Handler {
 func Register(app *fiber.App) {
 	deps := &Dependencies{
 		Q:  database.Q,
-		DB: database.DB,
+		DB: sqlx.NewDb(database.DB, "sqlite3"),
 	}
 
 	app.Use(logger.New(logger.Config{

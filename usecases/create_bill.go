@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/mtstnt/urunan/database"
+	"github.com/mtstnt/urunan/entities"
 	"github.com/mtstnt/urunan/helpers"
 )
 
@@ -20,6 +21,7 @@ type CreateBillRequest struct {
 		Price      float64 `json:"price"`
 		InitialQty int64   `json:"initial_qty"`
 	} `json:"items"`
+	HostNickname string `json:"host_nickname"`
 }
 
 type CreateBillResponse struct {
@@ -27,14 +29,14 @@ type CreateBillResponse struct {
 }
 
 func CreateBillHandler(c *fiber.Ctx, deps *Dependencies) error {
-	user := c.Context().UserValue("user").(database.User)
+	user := c.Context().UserValue("user").(entities.User)
 
 	var request CreateBillRequest
 	if err := c.BodyParser(&request); err != nil {
 		return helpers.Error(c, http.StatusBadRequest, err)
 	}
 
-	code := strings.ToUpper(uuid.New().String())[:5]
+	code := strings.ToUpper(uuid.New().String())[:6]
 	bill, err := deps.Q.CreateBill(c.Context(), database.CreateBillParams{
 		Code:        code,
 		Title:       request.Title,
@@ -49,6 +51,7 @@ func CreateBillHandler(c *fiber.Ctx, deps *Dependencies) error {
 		BillID:   bill.ID,
 		UserID:   user.ID,
 		JoinedAt: time.Now().Unix(),
+		Nickname: request.HostNickname,
 	}); err != nil {
 		return helpers.Error(c, http.StatusInternalServerError, err)
 	}

@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS participants (
     bill_id         INTEGER NOT NULL,
     user_id         INTEGER NOT NULL,
 
+    nickname        VARCHAR(255) NOT NULL,
     joined_at       INTEGER NOT NULL,
     payment_status  BOOLEAN DEFAULT FALSE,
 
@@ -56,6 +57,7 @@ CREATE TABLE IF NOT EXISTS orders (
     item_id         INTEGER NOT NULL,
 
     qty             INTEGER NOT NULL,
+    note            TEXT DEFAULT NULL,
 
     FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE,
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE

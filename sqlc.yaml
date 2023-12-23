@@ -6,6 +6,7 @@ sql:
       - "sql/queries/bills.sql"
       - "sql/queries/items.sql"
       - "sql/queries/participants.sql"
+      - "sql/queries/orders.sql"
     schema: "sql/schema.sql"
     gen:
       go:

@@ -25,16 +25,18 @@ type Item struct {
 }
 
 type Order struct {
-	ID            int64 `json:"id"`
-	ParticipantID int64 `json:"participant_id"`
-	ItemID        int64 `json:"item_id"`
-	Qty           int64 `json:"qty"`
+	ID            int64          `json:"id"`
+	ParticipantID int64          `json:"participant_id"`
+	ItemID        int64          `json:"item_id"`
+	Qty           int64          `json:"qty"`
+	Note          sql.NullString `json:"note"`
 }
 
 type Participant struct {
 	ID            int64        `json:"id"`
 	BillID        int64        `json:"bill_id"`
 	UserID        int64        `json:"user_id"`
+	Nickname      string       `json:"nickname"`
 	JoinedAt      int64        `json:"joined_at"`
 	PaymentStatus sql.NullBool `json:"payment_status"`
 }
